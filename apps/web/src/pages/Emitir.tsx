@@ -64,7 +64,7 @@ export default function Emitir({ empresa, onEmitida }: { empresa: Empresa; onEmi
   return (
     <form onSubmit={emitir}>
       {estado && <div className={`alert ${estado.tipo}`}>{estado.msg}{estado.detalhe && <pre style={{ marginTop: 8 }}>{estado.detalhe}</pre>}</div>}
-      {empresa.certValidoAte != null && new Date(empresa.certValidoAte) < new Date() && <div className="alert bad">Certificado digital vencido. Peça à SmartSolve para atualizar.</div>}
+      {empresa.certValidoAte != null && new Date(empresa.certValidoAte) < new Date() && <div className="alert bad">Certificado digital vencido. Peça à SmartSolve para atualizar em Empresas / Acessos.</div>}
 
       <div className="card">
         <h3>1 · Quando e para quem</h3>

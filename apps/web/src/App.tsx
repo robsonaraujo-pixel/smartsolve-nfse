@@ -5,9 +5,10 @@ import Emitir from "./pages/Emitir";
 import Notas from "./pages/Notas";
 import BancoXml from "./pages/BancoXml";
 import Cadastros from "./pages/Cadastros";
-import Admin from "./pages/Admin";
+import Empresas from "./pages/Empresas";
+import Escritorio from "./pages/Escritorio";
 
-type Aba = "emitir" | "notas" | "xml" | "cadastros" | "admin";
+type Aba = "emitir" | "notas" | "xml" | "cadastros" | "empresas" | "escritorio";
 
 export default function App() {
   const [s, setS] = useState<Sessao | null>(() => sessao.get());
@@ -48,15 +49,17 @@ export default function App() {
         <button className={aba === "notas" ? "active" : ""} onClick={() => setAba("notas")}>Notas emitidas</button>
         <button className={aba === "xml" ? "active" : ""} onClick={() => setAba("xml")}>Banco de XML</button>
         <button className={aba === "cadastros" ? "active" : ""} onClick={() => setAba("cadastros")}>Tomadores e serviços</button>
-        {interno && <button className={aba === "admin" ? "active" : ""} onClick={() => setAba("admin")}>{admin ? "Empresas e usuários" : "Empresas"}</button>}
+        {interno && <button className={aba === "empresas" ? "active" : ""} onClick={() => setAba("empresas")}>Empresas / Acessos</button>}
+        {interno && <button className={aba === "escritorio" ? "active" : ""} onClick={() => setAba("escritorio")}>Escritório / Usuários</button>}
       </nav>
       <main>
-        {!empresa && aba !== "admin" ? <div className="card">Nenhuma empresa vinculada ao seu usuário. {interno ? "Cadastre uma em Empresas." : "Fale com a SmartSolve."}</div> : null}
+        {!empresa && aba !== "empresas" && aba !== "escritorio" ? <div className="card">Nenhuma empresa vinculada ao seu usuário. {interno ? "Cadastre uma em Empresas / Acessos." : "Fale com a SmartSolve."}</div> : null}
         {empresa && aba === "emitir" && <Emitir empresa={empresa} onEmitida={() => setAba("notas")} />}
         {empresa && aba === "notas" && <Notas empresa={empresa} papel={s.usuario.papel} />}
         {empresa && aba === "xml" && <BancoXml empresa={empresa} interno={interno} />}
         {empresa && aba === "cadastros" && <Cadastros empresa={empresa} interno={interno} />}
-        {interno && aba === "admin" && <Admin admin={admin} onEmpresasChanged={() => api<Empresa[]>("/empresas").then(setEmpresas)} />}
+        {interno && aba === "empresas" && <Empresas onEmpresasChanged={() => api<Empresa[]>("/empresas").then(setEmpresas)} />}
+        {interno && aba === "escritorio" && <Escritorio admin={admin} />}
       </main>
     </>
   );

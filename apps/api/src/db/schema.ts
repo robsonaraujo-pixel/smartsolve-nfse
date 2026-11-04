@@ -49,6 +49,11 @@ export const empresas = sqliteTable("empresas", {
   /** Percentual usado quando modoTotTrib = SN_NOMINAL */
   pTribSN: real("p_trib_sn"),
   informarIbsCbs: integer("informar_ibs_cbs", { mode: "boolean" }).notNull().default(false),
+  /** Forma de acesso ao portal nacional: PORTAL_SENHA (usuário/senha do portal, só emissor web) | CERT_PROPRIO (A1 da empresa) | CERT_ESCRITORIO (A1 do escritório por procuração) */
+  modoAcesso: text("modo_acesso", { enum: ["PORTAL_SENHA", "CERT_PROPRIO", "CERT_ESCRITORIO"] }).notNull().default("CERT_PROPRIO"),
+  portalLogin: text("portal_login"),
+  portalSenhaCifrada: blob("portal_senha_cifrada", { mode: "buffer" }), // iv(12)+cifra
+  procuracaoValidaAte: integer("procuracao_valida_ate", { mode: "timestamp_ms" }),
   tpAmb: integer("tp_amb").notNull().default(2), // 2 produção restrita, 1 produção
   serieDps: text("serie_dps").notNull().default("1"),
   proximoNDps: integer("proximo_n_dps").notNull().default(1),
@@ -63,6 +68,18 @@ export const certificados = sqliteTable("certificados", {
   senhaCifrada: blob("senha_cifrada", { mode: "buffer" }).notNull(), // iv(12)+cifra
   iv: blob("iv", { mode: "buffer" }).notNull(),
   subject: text("subject").notNull(),
+  validoAte: integer("valido_ate", { mode: "timestamp_ms" }).notNull(),
+  criadoEm: integer("criado_em", { mode: "timestamp_ms" }).notNull().$defaultFn(() => new Date()),
+});
+
+/** Certificado A1 do escritório contábil (usado nas empresas com modoAcesso = CERT_ESCRITORIO) */
+export const certificadoEscritorio = sqliteTable("certificado_escritorio", {
+  id: text("id").primaryKey().default("escritorio"),
+  pfxCifrado: blob("pfx_cifrado", { mode: "buffer" }).notNull(),
+  senhaCifrada: blob("senha_cifrada", { mode: "buffer" }).notNull(),
+  iv: blob("iv", { mode: "buffer" }).notNull(),
+  subject: text("subject").notNull(),
+  cnpj: text("cnpj"),
   validoAte: integer("valido_ate", { mode: "timestamp_ms" }).notNull(),
   criadoEm: integer("criado_em", { mode: "timestamp_ms" }).notNull().$defaultFn(() => new Date()),
 });

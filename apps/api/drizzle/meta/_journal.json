@@ -15,6 +15,13 @@
       "when": 1793763227472,
       "tag": "0001_tot_trib",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1793763368942,
+      "tag": "0002_acessos",
+      "breakpoints": true
     }
   ]
 }
