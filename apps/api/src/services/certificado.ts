@@ -51,6 +51,8 @@ export async function certificadoEscritorio(): Promise<CertificadoA1> {
 export async function certificadoDaEmpresa(empresaId: string): Promise<CertificadoA1> {
   const emp = await db.query.empresas.findFirst({ where: eq(schema.empresas.id, empresaId), columns: { modoAcesso: true, procuracaoValidaAte: true, razaoSocial: true } });
   if (!emp) throw erro(404, "Empresa não encontrada");
+  const esc = await db.query.escritorio.findFirst();
+  if (esc?.usarCertificadoParaTodas) return certificadoEscritorio();
   if (emp.modoAcesso === "PORTAL_SENHA") {
     throw erro(422, "Esta empresa está configurada para acesso por usuário e senha do portal. A transmissão pela API exige certificado digital (próprio ou do escritório por procuração); use o Emissor Web ou altere o modo de acesso em Empresas / Acessos.");
   }

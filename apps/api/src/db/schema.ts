@@ -72,6 +72,19 @@ export const certificados = sqliteTable("certificados", {
   criadoEm: integer("criado_em", { mode: "timestamp_ms" }).notNull().$defaultFn(() => new Date()),
 });
 
+/** Dados do escritório contábil (registro único) */
+export const escritorio = sqliteTable("escritorio", {
+  id: text("id").primaryKey().default("escritorio"),
+  cnpj: text("cnpj"),
+  razaoSocial: text("razao_social"),
+  nomeFantasia: text("nome_fantasia"),
+  email: text("email"),
+  fone: text("fone"),
+  /** Quando ligado, o certificado matriz do escritório é usado na emissão de TODAS as empresas, independente do modo de acesso de cada uma */
+  usarCertificadoParaTodas: integer("usar_certificado_para_todas", { mode: "boolean" }).notNull().default(false),
+  atualizadoEm: integer("atualizado_em", { mode: "timestamp_ms" }).notNull().$defaultFn(() => new Date()),
+});
+
 /** Certificado A1 do escritório contábil (usado nas empresas com modoAcesso = CERT_ESCRITORIO) */
 export const certificadoEscritorio = sqliteTable("certificado_escritorio", {
   id: text("id").primaryKey().default("escritorio"),

@@ -5,7 +5,7 @@ import { db, schema, erro } from "../services/db.js";
 import { salvarCertificado, salvarCertificadoEscritorio } from "../services/certificado.js";
 import { cifrar } from "../services/cripto.js";
 
-const { empresas, certificados, certificadoEscritorio, syncDfe, auditoria } = schema;
+const { empresas, certificados, certificadoEscritorio, escritorio, syncDfe, auditoria } = schema;
 
 const empresaSchema = z.object({
   cnpj: z.string().regex(/^[0-9A-Z]{14}$/, "CNPJ com 14 posições, sem máscara"),
@@ -120,5 +120,25 @@ export default async function (app: FastifyInstance) {
     } catch (e) {
       return reply.code(422).send({ erro: `Não foi possível ler o PFX: ${(e as Error).message}` });
     }
+  });
+
+  /** Dados do escritório contábil + flag do certificado matriz. */
+  app.get("/escritorio", { preHandler: app.exigirPapel("ADMIN", "OPERADOR") }, async () => {
+    const e = await db.query.escritorio.findFirst();
+    const c = await db.select({ subject: certificadoEscritorio.subject, cnpj: certificadoEscritorio.cnpj, validoAte: certificadoEscritorio.validoAte }).from(certificadoEscritorio);
+    return { ...(e ?? { id: "escritorio", cnpj: null, razaoSocial: null, nomeFantasia: null, email: null, fone: null, usarCertificadoParaTodas: false }), certificado: c[0] ?? null };
+  });
+  app.put("/escritorio", { preHandler: app.exigirPapel("ADMIN") }, async (req) => {
+    const body = z.object({
+      cnpj: z.string().regex(/^[0-9A-Z]{14}$/).optional(),
+      razaoSocial: z.string().min(2).optional(),
+      nomeFantasia: z.string().optional(),
+      email: z.string().email().optional(),
+      fone: z.string().optional(),
+      usarCertificadoParaTodas: z.boolean().optional(),
+    }).parse(req.body);
+    const [e] = await db.insert(escritorio).values({ id: "escritorio", ...body }).onConflictDoUpdate({ target: escritorio.id, set: { ...body, atualizadoEm: new Date() } }).returning();
+    await db.insert(auditoria).values({ usuarioId: req.user.id, acao: "ESCRITORIO_ATUALIZADO", detalhe: JSON.stringify(body) });
+    return e;
   });
 }

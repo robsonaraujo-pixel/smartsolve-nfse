@@ -11,6 +11,7 @@ const ROTULO: Record<ModoAcesso, string> = { PORTAL_SENHA: "Usuário e senha do 
 export default function Empresas({ onEmpresasChanged }: { onEmpresasChanged: () => void }) {
   const [empresas, setEmpresas] = useState<EmpresaRow[]>([]);
   const [certEsc, setCertEsc] = useState<CertEscritorio | null>(null);
+  const [flagTodas, setFlagTodas] = useState(false);
   const [e, setE] = useState({ cnpj: "", razaoSocial: "", nomeFantasia: "", im: "", cMun: "", email: "", fone: "", modoTotTrib: "IBPT", pTribSN: "", regApTribSN: "1", opSimpNac: "3", tpAmb: "2" });
   const [buscando, setBuscando] = useState(false);
   const [infoCnpj, setInfoCnpj] = useState("");
@@ -18,7 +19,7 @@ export default function Empresas({ onEmpresasChanged }: { onEmpresasChanged: () 
   const [acesso, setAcesso] = useState<{ modo: ModoAcesso; login: string; senha: string; procuracao: string; pfx?: File; pfxSenha: string }>({ modo: "CERT_PROPRIO", login: "", senha: "", procuracao: "", pfxSenha: "" });
   const [msg, setMsg] = useState<{ tipo: "ok" | "bad"; texto: string } | null>(null);
 
-  const carregar = () => Promise.all([api<EmpresaRow[]>("/empresas").then(setEmpresas), api<CertEscritorio | null>("/escritorio/certificado").then(setCertEsc).catch(() => {})]);
+  const carregar = () => Promise.all([api<EmpresaRow[]>("/empresas").then(setEmpresas), api<{ certificado: CertEscritorio | null; usarCertificadoParaTodas: boolean }>("/escritorio").then((e) => { setCertEsc(e.certificado); setFlagTodas(e.usarCertificadoParaTodas); }).catch(() => {})]);
   useEffect(() => { carregar(); }, []);
 
   async function buscarCnpj() {
@@ -81,6 +82,7 @@ export default function Empresas({ onEmpresasChanged }: { onEmpresasChanged: () 
   return (
     <>
       {msg && <div className={`alert ${msg.tipo}`}>{msg.texto}</div>}
+      {flagTodas && <div className="alert warn">O escritório está configurado para emitir por todas as empresas com o certificado matriz (Escritório / Usuários). O modo de acesso individual abaixo fica em segundo plano enquanto essa opção estiver ligada.</div>}
       <div className="card">
         <h2>Empresas (prestadores)</h2>
         <form className="grid" onSubmit={salvarEmpresa} style={{ marginBottom: 16 }}>
