@@ -10,6 +10,7 @@ import {
 import { and, eq, sql } from "drizzle-orm";
 import { db, schema, erro } from "./db.js";
 import { certificadoDaEmpresa } from "./certificado.js";
+import { assertFiscalWriteEnabled } from "./fiscal-write-guard.js";
 
 const { empresas, tomadores, dps, tentativas, documentos } = schema;
 export const VER_APLIC = "SmartSolveNFSe/0.1.0";
@@ -147,6 +148,7 @@ async function buscarDps(dpsId: string) {
 
 /** Assina, transmite e persiste. Idempotente: se já houver NFS-e para o idDps, recupera em vez de duplicar. */
 export async function transmitirDps(dpsId: string) {
+  assertFiscalWriteEnabled("TRANSMIT_NFSE");
   const { row, empresa } = await buscarDps(dpsId);
   if (row.status === "AUTORIZADA") return row;
   const cert = await certificadoDaEmpresa(row.empresaId);
@@ -218,6 +220,7 @@ async function registrarAutorizada(dpsId: string, empresaId: string, chaveAcesso
 }
 
 export async function cancelarNfse(dpsId: string, cMotivo: 1 | 2 | 9, xMotivo?: string) {
+  assertFiscalWriteEnabled("CANCEL_NFSE");
   const { row, empresa } = await buscarDps(dpsId);
   if (row.status !== "AUTORIZADA" || !row.chaveAcesso) throw erro(422, "Só é possível cancelar NFS-e autorizada");
   const cert = await certificadoDaEmpresa(row.empresaId);
