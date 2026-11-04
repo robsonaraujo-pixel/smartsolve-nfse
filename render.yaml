@@ -1,0 +1,23 @@
+# Render: "New +" → Blueprint → aponte para este repositório. Cria o serviço web com disco persistente.
+services:
+  - type: web
+    name: smartsolve-nfse
+    runtime: docker
+    plan: starter
+    region: ohio
+    healthCheckPath: /api/health
+    disk:
+      name: dados
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_URL
+        value: file:/data/nfse.db
+      - key: JWT_SECRET
+        generateValue: true
+      - key: APP_ENCRYPTION_KEY
+        generateValue: true
+      - key: ADMIN_EMAIL
+        value: robson.araujo@smartsolve.com.br
+      - key: ADMIN_SENHA
+        sync: false
