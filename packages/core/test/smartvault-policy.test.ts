@@ -38,3 +38,10 @@ test("agente não assina sem aprovação humana", () => {
   assert.equal(authorizeVaultUse({ ...base, actorId: "yellowdot", actorType: "AGENT", ownerId: "robson" }).reason, "HUMAN_APPROVAL_REQUIRED");
   assert.equal(authorizeVaultUse({ ...base, actorId: "yellowdot", actorType: "AGENT", ownerId: "robson", approvedByHumanId: "robson" }).reason, "AUTHORIZED");
 });
+
+test("agente sem proprietário vinculado é bloqueado inclusive para mTLS", () => {
+  assert.equal(authorizeVaultUse({ ...base, actorId: "yellowdot", actorType: "AGENT", ownerId: undefined, operation: "MTLS" }).reason, "OWNER_MISMATCH");
+});
+test("aprovação de humano diferente do proprietário não autoriza agente", () => {
+  assert.equal(authorizeVaultUse({ ...base, actorId: "yellowdot", actorType: "AGENT", ownerId: "robson", approvedByHumanId: "outro" }).reason, "OWNER_MISMATCH");
+});
