@@ -27,7 +27,7 @@ export interface VaultRequest {
   now: string;
 }
 export type VaultDecision = { allowed: true; reason: "AUTHORIZED" } |
-  { allowed: false; reason: "INVALID_IDENTITY" | "CERT_EXPIRED" | "DELEGATION_MISSING" | "DELEGATION_UNVERIFIED" | "DELEGATION_EXPIRED" | "OPERATION_NOT_DELEGATED" | "HUMAN_APPROVAL_REQUIRED" };
+  { allowed: false; reason: "INVALID_IDENTITY" | "CERT_EXPIRED" | "DELEGATION_MISSING" | "DELEGATION_UNVERIFIED" | "DELEGATION_EXPIRED" | "OPERATION_NOT_DELEGATED" | "HUMAN_APPROVAL_REQUIRED" | "OWNER_MISMATCH" };
 const cnpj = (s: string) => s.replace(/[^0-9]/g, "");
 const valid = (s: string) => cnpj(s).length === 14;
 export function authorizeVaultUse(r: VaultRequest): VaultDecision {
@@ -52,8 +52,16 @@ export function authorizeVaultUse(r: VaultRequest): VaultDecision {
     if (!d.operations.includes(r.operation)) return { allowed: false, reason: "OPERATION_NOT_DELEGATED" };
   }
   // Um agente não herda poderes do proprietário humano. Assinatura exige aprovação específica.
-  if (r.actorType === "AGENT" && r.operation !== "MTLS" && !r.approvedByHumanId) {
-    return { allowed: false, reason: "HUMAN_APPROVAL_REQUIRED" };
+  if (r.actorType === "AGENT") {
+    // Identidade de agente sem proprietário verificado não pode utilizar certificado.
+    if (!r.ownerId) return { allowed: false, reason: "OWNER_MISMATCH" };
+    // Mesmo em mTLS, o agente precisa de escopo e representação previamente validados.
+    if (r.operation !== "MTLS" && !r.approvedByHumanId) {
+      return { allowed: false, reason: "HUMAN_APPROVAL_REQUIRED" };
+    }
+    if (r.approvedByHumanId && r.approvedByHumanId !== r.ownerId) {
+      return { allowed: false, reason: "OWNER_MISMATCH" };
+    }
   }
   return { allowed: true, reason: "AUTHORIZED" };
 }
