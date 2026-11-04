@@ -20,6 +20,7 @@ COPY --from=build /app/apps/api/package.json apps/api/
 COPY --from=build /app/apps/web/package.json apps/web/
 RUN npm ci --omit=dev
 COPY --from=build /app/packages/core/dist packages/core/dist
+COPY --from=build /app/packages/core/data packages/core/data
 COPY --from=build /app/apps/api/dist apps/api/dist
 COPY --from=build /app/apps/api/drizzle apps/api/drizzle
 COPY --from=build /app/apps/web/dist apps/web/dist
