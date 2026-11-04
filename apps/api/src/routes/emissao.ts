@@ -3,6 +3,7 @@ import { z } from "zod";
 import { and, desc, eq, like } from "drizzle-orm";
 import { db, schema, erro } from "../services/db.js";
 import { prepararDps, transmitirDps, cancelarNfse } from "../services/emissao.js";
+import { assertFiscalWriteEnabled } from "../services/fiscal-write-guard.js";
 
 const { dps, documentos, tentativas, servicosCatalogo, auditoria, STATUS_DPS } = schema;
 
@@ -74,6 +75,8 @@ export default async function (app: FastifyInstance) {
     const { empresaId } = req.params as { empresaId: string };
     await app.exigirEmpresa(req, empresaId, "podeEmitir");
     const body = pedidoSchema.parse(req.body);
+    // Evita reservar número/criar rascunho quando a requisição tentaria transmitir.
+    if (!body.somenteRascunho) assertFiscalWriteEnabled("TRANSMIT_NFSE");
 
     let servico = body.servico;
     let tribFed = body.tribFed;
