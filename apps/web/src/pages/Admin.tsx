@@ -7,7 +7,21 @@ interface EmpresaRow extends Empresa { certSubject?: string | null; certValidoAt
 export default function Admin({ admin, onEmpresasChanged }: { admin: boolean; onEmpresasChanged: () => void }) {
   const [empresas, setEmpresas] = useState<EmpresaRow[]>([]);
   const [usuarios, setUsuarios] = useState<UsuarioRow[]>([]);
-  const [e, setE] = useState({ cnpj: "", razaoSocial: "", im: "", cMun: "", aliquotaSN: "", regApTribSN: "1", tpAmb: "2" });
+  const [e, setE] = useState({ cnpj: "", razaoSocial: "", nomeFantasia: "", im: "", cMun: "", email: "", fone: "", aliquotaSN: "", regApTribSN: "1", opSimpNac: "3", tpAmb: "2" });
+  const [buscando, setBuscando] = useState(false);
+  const [infoCnpj, setInfoCnpj] = useState<string>("");
+
+  async function buscarCnpj() {
+    const cnpj = e.cnpj.replace(/\D/g, "");
+    if (cnpj.length !== 14) return;
+    setBuscando(true); setInfoCnpj(""); setMsg(null);
+    try {
+      const d = await api<{ razaoSocial: string; nomeFantasia?: string; cMun?: string; municipio?: string; uf?: string; email?: string; fone?: string; situacao?: string; optanteSimples?: boolean; optanteMei?: boolean; cnaePrincipal?: { codigo: string; descricao: string } }>(`/consultas/cnpj/${cnpj}`);
+      setE((o) => ({ ...o, razaoSocial: d.razaoSocial ?? o.razaoSocial, nomeFantasia: d.nomeFantasia ?? o.nomeFantasia, cMun: d.cMun ?? o.cMun, email: d.email ?? o.email, fone: d.fone ?? o.fone, opSimpNac: d.optanteMei ? "2" : d.optanteSimples ? "3" : "1" }));
+      setInfoCnpj(`${d.situacao ?? ""} · ${d.municipio ?? ""}/${d.uf ?? ""} · ${d.optanteMei ? "MEI" : d.optanteSimples ? "Simples Nacional" : "não optante"}${d.cnaePrincipal ? ` · CNAE ${d.cnaePrincipal.codigo} ${d.cnaePrincipal.descricao}` : ""}${d.cMun ? "" : " · informe o IBGE manualmente"}`);
+    } catch (err) { setMsg({ tipo: "bad", texto: (err as Error).message }); }
+    finally { setBuscando(false); }
+  }
   const [u, setU] = useState({ nome: "", email: "", senha: "", papel: "CLIENTE", empresaId: "", podeCancelar: false });
   const [cert, setCert] = useState<{ empresaId: string; senha: string; arquivo?: File }>({ empresaId: "", senha: "" });
   const [msg, setMsg] = useState<{ tipo: "ok" | "bad"; texto: string } | null>(null);
@@ -18,8 +32,8 @@ export default function Admin({ admin, onEmpresasChanged }: { admin: boolean; on
   async function salvarEmpresa(ev: React.FormEvent) {
     ev.preventDefault(); setMsg(null);
     try {
-      await api("/empresas", { method: "POST", json: { cnpj: e.cnpj.replace(/\D/g, ""), razaoSocial: e.razaoSocial, im: e.im || undefined, cMun: e.cMun, aliquotaSN: e.aliquotaSN ? Number(e.aliquotaSN.replace(",", ".")) : undefined, regApTribSN: Number(e.regApTribSN), tpAmb: Number(e.tpAmb) } });
-      setE({ cnpj: "", razaoSocial: "", im: "", cMun: "", aliquotaSN: "", regApTribSN: "1", tpAmb: "2" }); carregar(); onEmpresasChanged();
+      await api("/empresas", { method: "POST", json: { cnpj: e.cnpj.replace(/\D/g, ""), razaoSocial: e.razaoSocial, nomeFantasia: e.nomeFantasia || undefined, im: e.im || undefined, cMun: e.cMun, email: e.email || undefined, fone: e.fone || undefined, aliquotaSN: e.aliquotaSN ? Number(e.aliquotaSN.replace(",", ".")) : undefined, regApTribSN: Number(e.regApTribSN), opSimpNac: Number(e.opSimpNac), tpAmb: Number(e.tpAmb) } });
+      setE({ cnpj: "", razaoSocial: "", nomeFantasia: "", im: "", cMun: "", email: "", fone: "", aliquotaSN: "", regApTribSN: "1", opSimpNac: "3", tpAmb: "2" }); setInfoCnpj(""); carregar(); onEmpresasChanged();
       setMsg({ tipo: "ok", texto: "Empresa cadastrada. Agora envie o certificado A1 e cadastre os serviços do catálogo." });
     } catch (err) { setMsg({ tipo: "bad", texto: (err as Error).message }); }
   }
@@ -48,10 +62,17 @@ export default function Admin({ admin, onEmpresasChanged }: { admin: boolean; on
       <div className="card">
         <h2>Empresas (prestadores)</h2>
         <form className="grid" onSubmit={salvarEmpresa} style={{ marginBottom: 16 }}>
-          <div className="col-3"><label>CNPJ <span className="req">*</span></label><input value={e.cnpj} onChange={(x) => setE({ ...e, cnpj: x.target.value })} required /></div>
+          <div className="col-3"><label>CNPJ <span className="req">*</span></label>
+            <div className="row" style={{ flexWrap: "nowrap" }}><input value={e.cnpj} onChange={(x) => setE({ ...e, cnpj: x.target.value })} onBlur={buscarCnpj} placeholder="00.000.000/0000-00" required /><button type="button" className="btn small" onClick={buscarCnpj} disabled={buscando}>{buscando ? "…" : "Buscar"}</button></div></div>
           <div className="col-5" style={{ gridColumn: "span 5" }}><label>Razão social <span className="req">*</span></label><input value={e.razaoSocial} onChange={(x) => setE({ ...e, razaoSocial: x.target.value })} required /></div>
           <div className="col-2" style={{ gridColumn: "span 2" }}><label>Inscrição municipal</label><input value={e.im} onChange={(x) => setE({ ...e, im: x.target.value })} /></div>
           <div className="col-2" style={{ gridColumn: "span 2" }}><label>Município IBGE <span className="req">*</span></label><input value={e.cMun} onChange={(x) => setE({ ...e, cMun: x.target.value })} placeholder="3550308" required /></div>
+          {infoCnpj && <div className="col-12 muted" style={{ fontSize: 13, marginTop: -4 }}>{infoCnpj}</div>}
+          <div className="col-4"><label>Nome fantasia</label><input value={e.nomeFantasia} onChange={(x) => setE({ ...e, nomeFantasia: x.target.value })} /></div>
+          <div className="col-4"><label>E-mail</label><input type="email" value={e.email} onChange={(x) => setE({ ...e, email: x.target.value })} /></div>
+          <div className="col-2" style={{ gridColumn: "span 2" }}><label>Telefone</label><input value={e.fone} onChange={(x) => setE({ ...e, fone: x.target.value })} /></div>
+          <div className="col-2" style={{ gridColumn: "span 2" }}><label>Enquadramento</label>
+            <select value={e.opSimpNac} onChange={(x) => setE({ ...e, opSimpNac: x.target.value })}><option value="3">ME/EPP Simples</option><option value="2">MEI</option><option value="1">Não optante</option></select></div>
           <div className="col-3"><label>Alíquota efetiva do Simples (%)</label><input value={e.aliquotaSN} onChange={(x) => setE({ ...e, aliquotaSN: x.target.value })} placeholder="6,00" /></div>
           <div className="col-5" style={{ gridColumn: "span 5" }}><label>Regime de apuração no Simples</label>
             <select value={e.regApTribSN} onChange={(x) => setE({ ...e, regApTribSN: x.target.value })}>

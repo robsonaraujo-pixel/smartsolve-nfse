@@ -26,7 +26,19 @@ function Busca({ rota, valor, onChange, placeholder }: { rota: "trib-nac" | "nbs
 export default function Cadastros({ empresa, interno }: { empresa: Empresa; interno: boolean }) {
   const [tomadores, setTomadores] = useState<Tomador[]>([]);
   const [servicos, setServicos] = useState<Servico[]>([]);
-  const [t, setT] = useState({ doc: "", nome: "", email: "", cMun: "", cep: "", logradouro: "", numero: "", bairro: "" });
+  const [t, setT] = useState({ doc: "", nome: "", email: "", cMun: "", cep: "", logradouro: "", numero: "", complemento: "", bairro: "" });
+  const [buscando, setBuscando] = useState(false);
+
+  async function buscarDoc() {
+    const doc = t.doc.replace(/\D/g, "");
+    if (doc.length !== 14) return;
+    setBuscando(true); setMsg("");
+    try {
+      const d = await api<{ razaoSocial: string; cMun?: string; cep?: string; logradouro?: string; numero?: string; complemento?: string; bairro?: string; email?: string }>(`/consultas/cnpj/${doc}`);
+      setT((o) => ({ ...o, nome: d.razaoSocial ?? o.nome, cMun: d.cMun ?? o.cMun, cep: d.cep ?? o.cep, logradouro: d.logradouro ?? o.logradouro, numero: d.numero ?? o.numero, complemento: d.complemento ?? o.complemento, bairro: d.bairro ?? o.bairro, email: d.email ?? o.email }));
+    } catch (err) { setMsg((err as Error).message); }
+    finally { setBuscando(false); }
+  }
   const [s, setS] = useState({ apelido: "", cTribNac: "", cNBS: "", descricaoPadrao: "", padrao: false });
   const [msg, setMsg] = useState("");
 
@@ -36,8 +48,8 @@ export default function Cadastros({ empresa, interno }: { empresa: Empresa; inte
   async function salvarTomador(e: React.FormEvent) {
     e.preventDefault(); setMsg("");
     const doc = t.doc.replace(/\D/g, "");
-    const body = { nome: t.nome, email: t.email || undefined, cMun: t.cMun || undefined, cep: t.cep.replace(/\D/g, "") || undefined, logradouro: t.logradouro || undefined, numero: t.numero || undefined, bairro: t.bairro || undefined, ...(doc.length === 14 ? { cnpj: doc } : doc.length === 11 ? { cpf: doc } : {}) };
-    try { await api(`/empresas/${empresa.id}/tomadores`, { method: "POST", json: body }); setT({ doc: "", nome: "", email: "", cMun: "", cep: "", logradouro: "", numero: "", bairro: "" }); carregar(); }
+    const body = { nome: t.nome, email: t.email || undefined, cMun: t.cMun || undefined, cep: t.cep.replace(/\D/g, "") || undefined, logradouro: t.logradouro || undefined, numero: t.numero || undefined, complemento: t.complemento || undefined, bairro: t.bairro || undefined, ...(doc.length === 14 ? { cnpj: doc } : doc.length === 11 ? { cpf: doc } : {}) };
+    try { await api(`/empresas/${empresa.id}/tomadores`, { method: "POST", json: body }); setT({ doc: "", nome: "", email: "", cMun: "", cep: "", logradouro: "", numero: "", complemento: "", bairro: "" }); carregar(); }
     catch (err) { setMsg((err as Error).message); }
   }
   async function salvarServico(e: React.FormEvent) {
@@ -52,7 +64,8 @@ export default function Cadastros({ empresa, interno }: { empresa: Empresa; inte
       <div className="card">
         <h2>Tomadores</h2>
         <form className="grid" onSubmit={salvarTomador} style={{ marginBottom: 16 }}>
-          <div className="col-3"><label>CNPJ ou CPF <span className="req">*</span></label><input value={t.doc} onChange={(e) => setT({ ...t, doc: e.target.value })} required /></div>
+          <div className="col-3"><label>CNPJ ou CPF <span className="req">*</span></label>
+            <div className="row" style={{ flexWrap: "nowrap" }}><input value={t.doc} onChange={(e) => setT({ ...t, doc: e.target.value })} onBlur={buscarDoc} required /><button type="button" className="btn small" onClick={buscarDoc} disabled={buscando}>{buscando ? "…" : "Buscar"}</button></div></div>
           <div className="col-6"><label>Nome / Razão social <span className="req">*</span></label><input value={t.nome} onChange={(e) => setT({ ...t, nome: e.target.value })} required /></div>
           <div className="col-3"><label>E-mail</label><input type="email" value={t.email} onChange={(e) => setT({ ...t, email: e.target.value })} /></div>
           <div className="col-3"><label>Município (IBGE 7)</label><input value={t.cMun} onChange={(e) => setT({ ...t, cMun: e.target.value })} placeholder="3550308" /></div>

@@ -14,6 +14,7 @@ import rotasCadastros from "./routes/cadastros.js";
 import rotasEmissao from "./routes/emissao.js";
 import rotasDocumentos from "./routes/documentos.js";
 import rotasCatalogo from "./routes/catalogo.js";
+import rotasConsultas from "./routes/consultas.js";
 import { migrarBanco } from "./db/index.js";
 import { garantirAdminInicial } from "./services/bootstrap.js";
 
@@ -40,6 +41,7 @@ export async function construirApp() {
     await i.register(rotasEmissao);
     await i.register(rotasDocumentos);
     await i.register(rotasCatalogo);
+    await i.register(rotasConsultas);
   };
   await app.register(rotas, { prefix: "/api" });
 
