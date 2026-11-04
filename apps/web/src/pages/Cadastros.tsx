@@ -1,6 +1,28 @@
 import { useEffect, useState } from "react";
 import { api, fmtCnpj, type Empresa, type Servico, type Tomador } from "../api";
 
+/** Busca no catálogo oficial (CTN ou NBS) por código ou descrição e devolve o código escolhido. */
+function Busca({ rota, valor, onChange, placeholder }: { rota: "trib-nac" | "nbs"; valor: string; onChange: (v: string) => void; placeholder: string }) {
+  const [q, setQ] = useState("");
+  const [itens, setItens] = useState<{ code: string; description: string }[]>([]);
+  const [aberto, setAberto] = useState(false);
+  useEffect(() => {
+    if (!aberto) return;
+    const t = setTimeout(() => api<{ code: string; description: string }[]>(`/catalogo/${rota}?q=${encodeURIComponent(q)}`).then(setItens), 150);
+    return () => clearTimeout(t);
+  }, [q, aberto, rota]);
+  return (
+    <div style={{ position: "relative" }}>
+      <input value={aberto ? q : valor} placeholder={placeholder} onFocus={() => { setAberto(true); setQ(""); }} onChange={(e) => setQ(e.target.value)} onBlur={() => setTimeout(() => setAberto(false), 150)} />
+      {aberto && itens.length > 0 && (
+        <div style={{ position: "absolute", zIndex: 10, top: "100%", left: 0, right: 0, maxHeight: 260, overflow: "auto", background: "#fff", border: "1px solid var(--line)", borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,.08)" }}>
+          {itens.map((i) => <div key={i.code} onMouseDown={() => { onChange(i.code); setAberto(false); }} style={{ padding: "8px 10px", cursor: "pointer", borderBottom: "1px solid var(--line)", fontSize: 13 }}><span className="mono">{i.code}</span> · {i.description}</div>)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Cadastros({ empresa, interno }: { empresa: Empresa; interno: boolean }) {
   const [tomadores, setTomadores] = useState<Tomador[]>([]);
   const [servicos, setServicos] = useState<Servico[]>([]);
@@ -46,13 +68,13 @@ export default function Cadastros({ empresa, interno }: { empresa: Empresa; inte
 
       <div className="card">
         <h2>Serviços do catálogo</h2>
-        <p className="muted" style={{ fontSize: 13 }}>Códigos definidos pela contabilidade a partir do CNAE do cliente (base CNAE × LC 116 × CTN × NBS). O cliente só escolhe entre estes.</p>
+        <p className="muted" style={{ fontSize: 13 }}>Códigos definidos pela contabilidade a partir do CNAE do cliente. A busca usa a lista oficial do portal nacional (338 códigos de tributação e 917 NBS). O cliente só escolhe entre estes.</p>
         {interno && (
           <form className="grid" onSubmit={salvarServico} style={{ marginBottom: 16 }}>
             <div className="col-3"><label>Apelido <span className="req">*</span></label><input value={s.apelido} onChange={(e) => setS({ ...s, apelido: e.target.value })} required /></div>
-            <div className="col-2" style={{ gridColumn: "span 2" }}><label>CTN (6 dígitos) <span className="req">*</span></label><input value={s.cTribNac} onChange={(e) => setS({ ...s, cTribNac: e.target.value })} placeholder="170201" required /></div>
-            <div className="col-2" style={{ gridColumn: "span 2" }}><label>NBS (9 dígitos)</label><input value={s.cNBS} onChange={(e) => setS({ ...s, cNBS: e.target.value })} /></div>
-            <div className="col-5" style={{ gridColumn: "span 5" }}><label>Descrição padrão <span className="req">*</span></label><input value={s.descricaoPadrao} onChange={(e) => setS({ ...s, descricaoPadrao: e.target.value })} required /></div>
+            <div className="col-3"><label>Código de tributação nacional <span className="req">*</span></label><Busca rota="trib-nac" valor={s.cTribNac} onChange={(v) => setS({ ...s, cTribNac: v })} placeholder="Buscar por código ou descrição (LC 116)" /></div>
+            <div className="col-3"><label>NBS</label><Busca rota="nbs" valor={s.cNBS} onChange={(v) => setS({ ...s, cNBS: v })} placeholder="Buscar NBS" /></div>
+            <div className="col-3"><label>Descrição padrão <span className="req">*</span></label><input value={s.descricaoPadrao} onChange={(e) => setS({ ...s, descricaoPadrao: e.target.value })} required /></div>
             <div className="col-12 row"><label style={{ margin: 0 }}><input type="checkbox" checked={s.padrao} onChange={(e) => setS({ ...s, padrao: e.target.checked })} style={{ width: "auto", marginRight: 6 }} />Serviço padrão</label><button className="btn primary">Salvar serviço</button></div>
           </form>
         )}

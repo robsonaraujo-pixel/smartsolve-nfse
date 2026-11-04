@@ -1,0 +1,217 @@
+{
+  "sourceURL": "https://www.gov.br/nfse/pt-br/biblioteca/documentacao-tecnica/documentacao-atual/nfse-esquemas_xsd-v1-01-20260209.zip",
+  "version": "v1.01-20260209",
+  "verifiedAt": "2026-11-03",
+  "xsdSha256": "830ea116c34d7310699e34b214b7214a65f7e5d3b1f09aeaa702f7e3f4283b17",
+  "regApTribSN": [
+    {
+      "code": "1",
+      "label": "Regime de apuração dos tributos federais e municipal pelo Simples Nacional",
+      "meaning": "Tributos federais e ISS no SN."
+    },
+    {
+      "code": "2",
+      "label": "Regime de apuração dos tributos federais pelo Simples Nacional e o ISSQN pela NFS-e conforme respectiva legislação municipal do tributo",
+      "meaning": "Federais no SN; ISS fora do SN."
+    },
+    {
+      "code": "3",
+      "label": "Regime de apuração dos tributos federais e municipal pela NFS-e conforme respectivas legislações federal e municipal de cada tributo",
+      "meaning": "Federais e ISS fora do SN conforme respectivas legislações; terceira opção confirmada."
+    }
+  ],
+  "pisCofinsCst": [
+    {
+      "code": "00",
+      "label": "Nenhum"
+    },
+    {
+      "code": "01",
+      "label": "Operação Tributável com Alíquota Básica"
+    },
+    {
+      "code": "02",
+      "label": "Operação Tributável com Alíquota Diferenciada"
+    },
+    {
+      "code": "03",
+      "label": "Operação Tributável com Alíquota por Unidade de Medida de Produto"
+    },
+    {
+      "code": "04",
+      "label": "Operação Tributável monofásica - Revenda a Alíquota Zero"
+    },
+    {
+      "code": "05",
+      "label": "Operação Tributável por Substituição Tributária"
+    },
+    {
+      "code": "06",
+      "label": "Operação Tributável a Alíquota Zero"
+    },
+    {
+      "code": "07",
+      "label": "Operação Isenta da Contribuição"
+    },
+    {
+      "code": "08",
+      "label": "Operação sem Incidência da Contribuição"
+    },
+    {
+      "code": "09",
+      "label": "Operação com Suspensão da Contribuição"
+    },
+    {
+      "code": "49",
+      "label": "Outras Operações de Saída"
+    },
+    {
+      "code": "50",
+      "label": "Operação com Direito a Crédito – Vinculada Exclusivamente a Receita Tributada no Mercado Interno"
+    },
+    {
+      "code": "51",
+      "label": "Operação com Direito a Crédito – Vinculada Exclusivamente a Receita Não-Tributada no Mercado Interno"
+    },
+    {
+      "code": "52",
+      "label": "Operação com Direito a Crédito – Vinculada Exclusivamente a Receita de Exportação"
+    },
+    {
+      "code": "53",
+      "label": "Operação com Direito a Crédito – Vinculada a Receitas Tributadas e Não-Tributadas no Mercado Interno"
+    },
+    {
+      "code": "54",
+      "label": "Operação com Direito a Crédito – Vinculada a Receitas Tributadas no Mercado Interno e de Exportação"
+    },
+    {
+      "code": "55",
+      "label": "Operação com Direito a Crédito – Vinculada a Receitas Não Tributadas no Mercado Interno e de Exportação"
+    },
+    {
+      "code": "56",
+      "label": "Operação com Direito a Crédito – Vinculada a Receitas Tributadas e Não-Tributadas no Mercado Interno e de Exportação"
+    },
+    {
+      "code": "60",
+      "label": "Crédito Presumido – Operação de Aquisição Vinculada Exclusivamente a Receita Tributada no Mercado Interno"
+    },
+    {
+      "code": "61",
+      "label": "Crédito Presumido – Operação de Aquisição Vinculada Exclusivamente a Receita Não-Tributada no Mercado Interno"
+    },
+    {
+      "code": "62",
+      "label": "Crédito Presumido – Operação de Aquisição Vinculada Exclusivamente a Receita de Exportação"
+    },
+    {
+      "code": "63",
+      "label": "Crédito Presumido – Operação de Aquisição Vinculada a Receitas Tributadas e Não-Tributadas no Mercado Interno"
+    },
+    {
+      "code": "64",
+      "label": "Crédito Presumido – Operação de Aquisição Vinculada a Receitas Tributadas no Mercado Interno e de Exportação"
+    },
+    {
+      "code": "65",
+      "label": "Crédito Presumido – Operação de Aquisição Vinculada a Receitas Não-Tributadas no Mercado Interno e de Exportação"
+    },
+    {
+      "code": "66",
+      "label": "Crédito Presumido – Operação de Aquisição Vinculada a Receitas Tributadas e Não-Tributadas no Mercado Interno e de Exportação"
+    },
+    {
+      "code": "67",
+      "label": "Crédito Presumido – Outras Operações"
+    },
+    {
+      "code": "70",
+      "label": "Operação de Aquisição sem Direito a Crédito"
+    },
+    {
+      "code": "71",
+      "label": "Operação de Aquisição com Isenção"
+    },
+    {
+      "code": "72",
+      "label": "Operação de Aquisição com Suspensão"
+    },
+    {
+      "code": "73",
+      "label": "Operação de Aquisição a Alíquota Zero"
+    },
+    {
+      "code": "74",
+      "label": "Operação de Aquisição sem Incidência da Contribuição"
+    },
+    {
+      "code": "75",
+      "label": "Operação de Aquisição por Substituição Tributária"
+    },
+    {
+      "code": "98",
+      "label": "Outras Operações de Entrada"
+    },
+    {
+      "code": "99",
+      "label": "Outras Operações"
+    }
+  ],
+  "tipoRetencaoPisCofins": [
+    {
+      "code": "0",
+      "label": "PIS/COFINS/CSLL Não Retidos"
+    },
+    {
+      "code": "1",
+      "label": "PIS/COFINS Retidos"
+    },
+    {
+      "code": "2",
+      "label": "PIS/COFINS Não Retidos"
+    },
+    {
+      "code": "3",
+      "label": "PIS/COFINS/CSLL Retidos"
+    },
+    {
+      "code": "4",
+      "label": "PIS/COFINS Retidos, CSLL Não Retido"
+    },
+    {
+      "code": "5",
+      "label": "PIS Retido, COFINS/CSLL Não Retido"
+    },
+    {
+      "code": "6",
+      "label": "COFINS Retido, PIS/CSLL Não Retido"
+    },
+    {
+      "code": "7",
+      "label": "PIS Não Retido, COFINS/CSLL Retidos"
+    },
+    {
+      "code": "8",
+      "label": "PIS/COFINS Não Retidos, CSLL Retido"
+    },
+    {
+      "code": "9",
+      "label": "COFINS Não Retido, PIS/CSLL Retidos"
+    }
+  ],
+  "retencaoIss": [
+    {
+      "code": "1",
+      "label": "Não Retido"
+    },
+    {
+      "code": "2",
+      "label": "Retido pelo Tomador"
+    },
+    {
+      "code": "3",
+      "label": "Retido pelo Intermediario"
+    }
+  ]
+}

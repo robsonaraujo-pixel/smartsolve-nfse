@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { and, desc, eq, like, or } from "drizzle-orm";
 import { db, schema, erro } from "../services/db.js";
+import { tribNacValido, nbsValido } from "@smartsolve/nfse-core";
 
 const { tomadores, servicosCatalogo } = schema;
 
@@ -77,6 +78,8 @@ export default async function (app: FastifyInstance) {
   app.post("/empresas/:empresaId/servicos", { preHandler: app.exigirPapel("ADMIN", "OPERADOR") }, async (req, reply) => {
     const { empresaId } = req.params as { empresaId: string };
     const body = servicoSchema.parse(req.body);
+    if (!tribNacValido(body.cTribNac)) return reply.code(422).send({ erro: `Código de tributação nacional ${body.cTribNac} não existe na lista oficial` });
+    if (body.cNBS && !nbsValido(body.cNBS)) return reply.code(422).send({ erro: `NBS ${body.cNBS} não existe na lista oficial` });
     if (body.padrao) await db.update(servicosCatalogo).set({ padrao: false }).where(eq(servicosCatalogo.empresaId, empresaId));
     const [s] = await db.insert(servicosCatalogo).values({ empresaId, ...body }).returning();
     return reply.code(201).send(s);

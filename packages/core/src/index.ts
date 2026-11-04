@@ -13,3 +13,4 @@ export { Adn, ADN_URLS } from "./adn/cliente.js";
 export type { DocumentoDfe } from "./adn/cliente.js";
 export { extrairResumoNfse } from "./dps/parseNfse.js";
 export type { ResumoNfse } from "./dps/parseNfse.js";
+export { CATALOGO_VERSAO, ENUMS_VERSAO, codigosTribNac, codigosNbs, enumsXsd, buscarTribNac, buscarNbs, tribNacValido, nbsValido } from "./catalogo.js";
