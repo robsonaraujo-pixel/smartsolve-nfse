@@ -1,6 +1,6 @@
 export type Papel = "ADMIN" | "OPERADOR" | "CLIENTE";
 export interface Sessao { token: string; usuario: { id: string; nome: string; papel: Papel }; empresas: Empresa[] }
-export interface Empresa { id: string; cnpj: string; razaoSocial: string; tpAmb?: number; certValidoAte?: number | null; aliquotaSN?: number | null; informarIbsCbs?: boolean }
+export interface Empresa { id: string; cnpj: string; razaoSocial: string; tpAmb?: number; certValidoAte?: number | null; modoTotTrib?: "INFORMAR" | "IBPT" | "SN_NOMINAL"; pTribSN?: number | null; informarIbsCbs?: boolean }
 export interface Tomador { id: string; cnpj?: string | null; cpf?: string | null; nome: string; cMun?: string | null }
 export interface Servico { id: string; apelido: string; cTribNac: string; cNBS?: string | null; descricaoPadrao: string; padrao: boolean }
 export interface DpsRow { id: string; serie: string; nDps: number; idDps: string; status: string; dCompet: string; chaveAcesso?: string | null; erros?: string | null; nNfse?: string | null; tomadorNome?: string | null; vServ?: number | null; cancelada?: boolean | null; criadoEm: number }

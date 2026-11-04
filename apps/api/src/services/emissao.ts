@@ -26,9 +26,30 @@ export interface PedidoEmissao {
   vDescCond?: number;
   tribMun: { tribISSQN?: 1 | 2 | 3 | 4; tpRetISSQN?: 1 | 2 | 3; pAliq?: number; exigSusp?: { tpSusp: 1 | 2; nProcesso: string } };
   tribFed?: { cstPisCofins?: string; tpRetPisCofins?: 1 | 2; vRetCP?: number; vRetIRRF?: number; vRetCSLL?: number };
+  /** Valor aproximado dos tributos informado na emissão (modo INFORMAR): percentual total ou valores */
+  totTrib?: { pTotTrib?: number; vTotTrib?: { fed: number; est: number; mun: number } };
   /** XML do grupo IBSCBS, quando a empresa estiver marcada para informar (2027 ou regime regular) */
   ibscbsXml?: string;
   substituir?: { chaveAcesso: string; cMotivo: 1 | 2 | 3 | 4; xMotivo?: string };
+}
+
+export const IBPT_PERCENTUAL_PADRAO = 13.45;
+
+/**
+ * Lei 12.741/2012 — valor aproximado dos tributos. Três políticas por empresa:
+ *  INFORMAR   → o usuário informa a cada emissão (percentual total ou valores fed/est/mun); se não informar, indTotTrib=0
+ *  IBPT       → percentual único 13,45% (tabela IBPT para serviços, aproximação adotada pelo escritório)
+ *  SN_NOMINAL → alíquota nominal do Simples cadastrada na empresa (pTotTribSN)
+ */
+export function resolverTotTrib(modo: "INFORMAR" | "IBPT" | "SN_NOMINAL", pTribSN: number | null, informado?: PedidoEmissao["totTrib"]): DpsInput["valores"]["trib"]["totTrib"] {
+  if (modo === "SN_NOMINAL") {
+    if (pTribSN == null) throw erro(422, "Empresa configurada para alíquota nominal do Simples, mas o percentual não foi cadastrado");
+    return { pTotTribSN: pTribSN };
+  }
+  if (modo === "IBPT") return { pTotTrib: { pTotTribFed: IBPT_PERCENTUAL_PADRAO, pTotTribEst: 0, pTotTribMun: 0 } };
+  if (informado?.vTotTrib) return { vTotTrib: { vTotTribFed: informado.vTotTrib.fed, vTotTribEst: informado.vTotTrib.est, vTotTribMun: informado.vTotTrib.mun } };
+  if (informado?.pTotTrib != null) return { pTotTrib: { pTotTribFed: informado.pTotTrib, pTotTribEst: 0, pTotTribMun: 0 } };
+  return { indTotTrib: 0 };
 }
 
 /** Monta o DpsInput a partir da empresa + pedido, reserva o número e grava o rascunho. */
@@ -102,7 +123,7 @@ export async function prepararDps(p: PedidoEmissao) {
           vRetIRRF: p.tribFed?.vRetIRRF,
           vRetCSLL: p.tribFed?.vRetCSLL,
         },
-        totTrib: empresa.aliquotaSN != null ? { pTotTribSN: empresa.aliquotaSN } : { indTotTrib: 0 },
+        totTrib: resolverTotTrib(empresa.modoTotTrib, empresa.pTribSN, p.totTrib),
       },
     },
     ibscbsXml: empresa.informarIbsCbs ? p.ibscbsXml : undefined,

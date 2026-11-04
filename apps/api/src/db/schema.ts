@@ -44,7 +44,10 @@ export const empresas = sqliteTable("empresas", {
   opSimpNac: integer("op_simp_nac").notNull().default(3), // 1 não optante, 2 MEI, 3 ME/EPP
   regApTribSN: integer("reg_ap_trib_sn").default(1), // 1,2,3
   regEspTrib: integer("reg_esp_trib").notNull().default(0),
-  aliquotaSN: real("aliquota_sn"), // pTotTribSN (%)
+  /** Valor aproximado dos tributos (Lei 12.741): INFORMAR (a cada emissão) | IBPT (13,45%) | SN_NOMINAL (alíquota nominal do Simples, %) */
+  modoTotTrib: text("modo_tot_trib", { enum: ["INFORMAR", "IBPT", "SN_NOMINAL"] }).notNull().default("IBPT"),
+  /** Percentual usado quando modoTotTrib = SN_NOMINAL */
+  pTribSN: real("p_trib_sn"),
   informarIbsCbs: integer("informar_ibs_cbs", { mode: "boolean" }).notNull().default(false),
   tpAmb: integer("tp_amb").notNull().default(2), // 2 produção restrita, 1 produção
   serieDps: text("serie_dps").notNull().default("1"),

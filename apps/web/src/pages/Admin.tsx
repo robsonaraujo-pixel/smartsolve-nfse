@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { api, fmtCnpj, fmtData, sessao, type Empresa } from "../api";
 
 interface UsuarioRow { id: string; nome: string; email: string; papel: string; ativo: boolean; empresas: { empresaId: string; cnpj: string; razaoSocial: string; podeEmitir: boolean; podeCancelar: boolean }[] }
-interface EmpresaRow extends Empresa { certSubject?: string | null; certValidoAte?: number | null; aliquotaSN?: number | null; regApTribSN?: number | null }
+interface EmpresaRow extends Empresa { certSubject?: string | null; certValidoAte?: number | null; regApTribSN?: number | null }
 
 export default function Admin({ admin, onEmpresasChanged }: { admin: boolean; onEmpresasChanged: () => void }) {
   const [empresas, setEmpresas] = useState<EmpresaRow[]>([]);
   const [usuarios, setUsuarios] = useState<UsuarioRow[]>([]);
-  const [e, setE] = useState({ cnpj: "", razaoSocial: "", nomeFantasia: "", im: "", cMun: "", email: "", fone: "", aliquotaSN: "", regApTribSN: "1", opSimpNac: "3", tpAmb: "2" });
+  const [e, setE] = useState({ cnpj: "", razaoSocial: "", nomeFantasia: "", im: "", cMun: "", email: "", fone: "", modoTotTrib: "IBPT", pTribSN: "", regApTribSN: "1", opSimpNac: "3", tpAmb: "2" });
   const [buscando, setBuscando] = useState(false);
   const [infoCnpj, setInfoCnpj] = useState<string>("");
 
@@ -32,8 +32,8 @@ export default function Admin({ admin, onEmpresasChanged }: { admin: boolean; on
   async function salvarEmpresa(ev: React.FormEvent) {
     ev.preventDefault(); setMsg(null);
     try {
-      await api("/empresas", { method: "POST", json: { cnpj: e.cnpj.replace(/\D/g, ""), razaoSocial: e.razaoSocial, nomeFantasia: e.nomeFantasia || undefined, im: e.im || undefined, cMun: e.cMun, email: e.email || undefined, fone: e.fone || undefined, aliquotaSN: e.aliquotaSN ? Number(e.aliquotaSN.replace(",", ".")) : undefined, regApTribSN: Number(e.regApTribSN), opSimpNac: Number(e.opSimpNac), tpAmb: Number(e.tpAmb) } });
-      setE({ cnpj: "", razaoSocial: "", nomeFantasia: "", im: "", cMun: "", email: "", fone: "", aliquotaSN: "", regApTribSN: "1", opSimpNac: "3", tpAmb: "2" }); setInfoCnpj(""); carregar(); onEmpresasChanged();
+      await api("/empresas", { method: "POST", json: { cnpj: e.cnpj.replace(/\D/g, ""), razaoSocial: e.razaoSocial, nomeFantasia: e.nomeFantasia || undefined, im: e.im || undefined, cMun: e.cMun, email: e.email || undefined, fone: e.fone || undefined, modoTotTrib: e.modoTotTrib, pTribSN: e.modoTotTrib === "SN_NOMINAL" && e.pTribSN ? Number(e.pTribSN.replace(",", ".")) : undefined, regApTribSN: Number(e.regApTribSN), opSimpNac: Number(e.opSimpNac), tpAmb: Number(e.tpAmb) } });
+      setE({ cnpj: "", razaoSocial: "", nomeFantasia: "", im: "", cMun: "", email: "", fone: "", modoTotTrib: "IBPT", pTribSN: "", regApTribSN: "1", opSimpNac: "3", tpAmb: "2" }); setInfoCnpj(""); carregar(); onEmpresasChanged();
       setMsg({ tipo: "ok", texto: "Empresa cadastrada. Agora envie o certificado A1 e cadastre os serviços do catálogo." });
     } catch (err) { setMsg({ tipo: "bad", texto: (err as Error).message }); }
   }
@@ -73,7 +73,14 @@ export default function Admin({ admin, onEmpresasChanged }: { admin: boolean; on
           <div className="col-2" style={{ gridColumn: "span 2" }}><label>Telefone</label><input value={e.fone} onChange={(x) => setE({ ...e, fone: x.target.value })} /></div>
           <div className="col-2" style={{ gridColumn: "span 2" }}><label>Enquadramento</label>
             <select value={e.opSimpNac} onChange={(x) => setE({ ...e, opSimpNac: x.target.value })}><option value="3">ME/EPP Simples</option><option value="2">MEI</option><option value="1">Não optante</option></select></div>
-          <div className="col-3"><label>Alíquota efetiva do Simples (%)</label><input value={e.aliquotaSN} onChange={(x) => setE({ ...e, aliquotaSN: x.target.value })} placeholder="6,00" /></div>
+          <div className="col-3"><label>Valor aproximado dos tributos (Lei 12.741)</label>
+            <select value={e.modoTotTrib} onChange={(x) => setE({ ...e, modoTotTrib: x.target.value })}>
+              <option value="INFORMAR">Informar a cada emissão</option>
+              <option value="IBPT">Tributos aproximados IBPT 13,45%</option>
+              <option value="SN_NOMINAL">Alíquota nominal do Simples Nacional</option>
+            </select>
+            {e.modoTotTrib === "SN_NOMINAL" && <input style={{ marginTop: 6 }} value={e.pTribSN} onChange={(x) => setE({ ...e, pTribSN: x.target.value })} placeholder="Alíquota nominal, ex.: 6,00" required />}
+          </div>
           <div className="col-5" style={{ gridColumn: "span 5" }}><label>Regime de apuração no Simples</label>
             <select value={e.regApTribSN} onChange={(x) => setE({ ...e, regApTribSN: x.target.value })}>
               <option value="1">Federais e ISS pelo Simples Nacional (DAS)</option>

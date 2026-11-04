@@ -14,7 +14,7 @@ async function upsertUsuario(nome: string, email: string, senha: string, papel: 
 const admin = await upsertUsuario("Administrador SmartSolve", "admin@smartsolve.com.br", "admin12345", "ADMIN");
 let empresa = await db.query.empresas.findFirst({ where: eq(empresas.cnpj, "12345678000195") });
 if (!empresa) {
-  [empresa] = await db.insert(empresas).values({ cnpj: "12345678000195", razaoSocial: "Cliente Exemplo Ltda", cMun: "3550308", opSimpNac: 3, regApTribSN: 1, aliquotaSN: 6, tpAmb: 2 }).returning();
+  [empresa] = await db.insert(empresas).values({ cnpj: "12345678000195", razaoSocial: "Cliente Exemplo Ltda", cMun: "3550308", opSimpNac: 3, regApTribSN: 1, modoTotTrib: "IBPT", tpAmb: 2 }).returning();
   await db.insert(servicosCatalogo).values({ empresaId: empresa.id, apelido: "Consultoria", cTribNac: "170101", cNBS: "114019000", descricaoPadrao: "Serviços de consultoria empresarial", padrao: true });
 }
 const cliente = await upsertUsuario("Financeiro Cliente Exemplo", "financeiro@clienteexemplo.com.br", "cliente12345", "CLIENTE");

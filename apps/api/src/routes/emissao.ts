@@ -40,6 +40,7 @@ const pedidoSchema = z.object({
       vRetCSLL: z.number().optional(),
     })
     .optional(),
+  totTrib: z.object({ pTotTrib: z.number().min(0).max(100).optional(), vTotTrib: z.object({ fed: z.number().min(0), est: z.number().min(0), mun: z.number().min(0) }).optional() }).optional(),
   ibscbsXml: z.string().optional(),
   substituir: z.object({ chaveAcesso: z.string().length(50), cMotivo: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]), xMotivo: z.string().optional() }).optional(),
   /** true = só prepara (rascunho) e devolve o XML para conferência; omitido = transmite */
@@ -84,7 +85,7 @@ export default async function (app: FastifyInstance) {
     }
     if (!servico) return reply.code(422).send({ erro: "Informe servicoId (catálogo) ou servico" });
 
-    const prep = await prepararDps({ empresaId, usuarioId: req.user.id, dCompet: body.dCompet, tomadorId: body.tomadorId, servico, vServ: body.vServ, vDescIncond: body.vDescIncond, vDescCond: body.vDescCond, tribMun: body.tribMun, tribFed, ibscbsXml: body.ibscbsXml, substituir: body.substituir });
+    const prep = await prepararDps({ empresaId, usuarioId: req.user.id, dCompet: body.dCompet, tomadorId: body.tomadorId, servico, vServ: body.vServ, vDescIncond: body.vDescIncond, vDescCond: body.vDescCond, tribMun: body.tribMun, tribFed, totTrib: body.totTrib, ibscbsXml: body.ibscbsXml, substituir: body.substituir });
     await db.insert(auditoria).values({ usuarioId: req.user.id, empresaId, acao: "DPS_CRIADA", detalhe: prep.dps.idDps });
     if (body.somenteRascunho) return reply.code(201).send({ dps: prep.dps, xml: prep.xml });
 

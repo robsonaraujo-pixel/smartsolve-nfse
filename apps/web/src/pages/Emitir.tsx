@@ -10,7 +10,7 @@ export default function Emitir({ empresa, onEmitida }: { empresa: Empresa; onEmi
   const [tomadores, setTomadores] = useState<Tomador[]>([]);
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [busca, setBusca] = useState("");
-  const [f, setF] = useState({ dCompet: hoje, tomadorId: "", servicoId: "", xDescServ: "", vServ: "", tpRetISSQN: 1 as 1 | 2, vDescIncond: "", tpRetPisCofins: 2 as 1 | 2, vRetIRRF: "", vRetCSLL: "", vRetCP: "" });
+  const [f, setF] = useState({ dCompet: hoje, tomadorId: "", servicoId: "", xDescServ: "", vServ: "", tpRetISSQN: 1 as 1 | 2, vDescIncond: "", tpRetPisCofins: 2 as 1 | 2, vRetIRRF: "", vRetCSLL: "", vRetCP: "", pTotTrib: "" });
   const [estado, setEstado] = useState<{ tipo: "ok" | "bad" | "warn"; msg: string; detalhe?: string } | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [previa, setPrevia] = useState<string>("");
@@ -33,6 +33,7 @@ export default function Emitir({ empresa, onEmitida }: { empresa: Empresa; onEmi
       vServ: num(f.vServ), vDescIncond: num(f.vDescIncond),
       tribMun: { tribISSQN: 1, tpRetISSQN: f.tpRetISSQN },
       tribFed: { tpRetPisCofins: f.tpRetPisCofins, vRetIRRF: num(f.vRetIRRF), vRetCSLL: num(f.vRetCSLL), vRetCP: num(f.vRetCP) },
+      totTrib: empresa.modoTotTrib === "INFORMAR" && num(f.pTotTrib) !== undefined ? { pTotTrib: num(f.pTotTrib) } : undefined,
       somenteRascunho,
     };
   }
@@ -105,6 +106,7 @@ export default function Emitir({ empresa, onEmitida }: { empresa: Empresa; onEmi
             <div className="toggle"><button type="button" className={`btn ${f.tpRetISSQN === 1 ? "on" : ""}`} onClick={() => set("tpRetISSQN", 1)}>Não</button><button type="button" className={`btn ${f.tpRetISSQN === 2 ? "on" : ""}`} onClick={() => set("tpRetISSQN", 2)}>Sim</button></div></div>
           <div className="col-3"><label>PIS/COFINS/CSLL retidos?</label>
             <div className="toggle"><button type="button" className={`btn ${f.tpRetPisCofins === 2 ? "on" : ""}`} onClick={() => set("tpRetPisCofins", 2)}>Não</button><button type="button" className={`btn ${f.tpRetPisCofins === 1 ? "on" : ""}`} onClick={() => set("tpRetPisCofins", 1)}>Sim</button></div></div>
+          {empresa.modoTotTrib === "INFORMAR" && <div className="col-3"><label>Tributos aproximados (% do valor)</label><input inputMode="decimal" value={f.pTotTrib} onChange={(e) => set("pTotTrib", e.target.value)} placeholder="ex.: 13,45" /></div>}
           {f.tpRetPisCofins === 1 && <>
             <div className="col-3"><label>IRRF retido (R$)</label><input inputMode="decimal" value={f.vRetIRRF} onChange={(e) => set("vRetIRRF", e.target.value)} /></div>
             <div className="col-3"><label>CSLL retida (R$)</label><input inputMode="decimal" value={f.vRetCSLL} onChange={(e) => set("vRetCSLL", e.target.value)} /></div>
@@ -112,7 +114,7 @@ export default function Emitir({ empresa, onEmitida }: { empresa: Empresa; onEmi
           </>}
         </div>
         <p className="muted" style={{ marginTop: 12, fontSize: 13 }}>
-          Regime: Simples Nacional, ISS apurado no DAS{empresa.aliquotaSN != null ? `, alíquota informada ${empresa.aliquotaSN}%` : ""}. IBS/CBS: {empresa.informarIbsCbs ? "informado" : "não informado (regra geral do Simples em 2026)"}. Esses parâmetros são definidos pela SmartSolve no cadastro da empresa.
+          Regime: Simples Nacional, ISS apurado no DAS. Tributos aproximados: {empresa.modoTotTrib === "IBPT" ? "IBPT 13,45%" : empresa.modoTotTrib === "SN_NOMINAL" ? `alíquota nominal do Simples ${empresa.pTribSN ?? "?"}%` : "informados a cada emissão"}. IBS/CBS: {empresa.informarIbsCbs ? "informado" : "não informado (regra geral do Simples em 2026)"}. Esses parâmetros são definidos pela SmartSolve no cadastro da empresa.
         </p>
       </div>
 

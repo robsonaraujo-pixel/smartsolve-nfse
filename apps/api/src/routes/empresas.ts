@@ -17,7 +17,8 @@ const empresaSchema = z.object({
   opSimpNac: z.union([z.literal(1), z.literal(2), z.literal(3)]).default(3),
   regApTribSN: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional(),
   regEspTrib: z.number().int().min(0).max(6).default(0),
-  aliquotaSN: z.number().min(0).max(100).optional(),
+  modoTotTrib: z.enum(["INFORMAR", "IBPT", "SN_NOMINAL"]).default("IBPT"),
+  pTribSN: z.number().min(0).max(100).optional(),
   informarIbsCbs: z.boolean().default(false),
   tpAmb: z.union([z.literal(1), z.literal(2)]).default(2),
   serieDps: z.string().regex(/^\d{1,5}$/).default("1"),
@@ -29,7 +30,7 @@ export default async function (app: FastifyInstance) {
     const ids = await app.empresasVisiveis(req);
     const sel = {
       id: empresas.id, cnpj: empresas.cnpj, razaoSocial: empresas.razaoSocial, nomeFantasia: empresas.nomeFantasia, cMun: empresas.cMun, tpAmb: empresas.tpAmb,
-      opSimpNac: empresas.opSimpNac, regApTribSN: empresas.regApTribSN, aliquotaSN: empresas.aliquotaSN, informarIbsCbs: empresas.informarIbsCbs, serieDps: empresas.serieDps,
+      opSimpNac: empresas.opSimpNac, regApTribSN: empresas.regApTribSN, modoTotTrib: empresas.modoTotTrib, pTribSN: empresas.pTribSN, informarIbsCbs: empresas.informarIbsCbs, serieDps: empresas.serieDps,
       proximoNDps: empresas.proximoNDps, ativa: empresas.ativa, certSubject: certificados.subject, certValidoAte: certificados.validoAte,
     };
     const q = db.select(sel).from(empresas).leftJoin(certificados, eq(certificados.empresaId, empresas.id)).orderBy(empresas.razaoSocial);
