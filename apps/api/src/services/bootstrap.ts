@@ -35,3 +35,67 @@ export async function garantirAdminInicial() {
   });
   console.log(`Admin inicial criado: ${email}`);
 }
+
+/**
+ * Seed idempotente do cenário de homologação YellowX → SmartSolve.
+ * Não configura validade da procuração nem habilita emissão/transmissão.
+ * Dados de endereço da SmartSolve foram transcritos do comprovante RFB fornecido.
+ */
+export async function garantirCadastrosHomologacao() {
+  const yellowCnpj = "56153537000146";
+  const smartCnpj = "22489717000181";
+
+  let yellow = await db.query.empresas.findFirst({
+    where: eq(schema.empresas.cnpj, yellowCnpj),
+  });
+
+  if (!yellow) {
+    const [created] = await db.insert(schema.empresas).values({
+      cnpj: yellowCnpj,
+      razaoSocial: "YELLOWX PUBLICIDADE E TREINAMENTOS LTDA",
+      im: "14448890",
+      cMun: "3550308",
+      opSimpNac: 3,
+      regEspTrib: 0,
+      informarIbsCbs: false,
+      modoAcesso: "CERT_ESCRITORIO",
+      tpAmb: 2,
+      serieDps: "1",
+      proximoNDps: 1,
+      ativa: true,
+    }).returning();
+    yellow = created;
+  }
+
+  const tomadorExistente = await db.query.tomadores.findFirst({
+    where: and(
+      eq(schema.tomadores.empresaId, yellow.id),
+      eq(schema.tomadores.cnpj, smartCnpj),
+    ),
+  });
+
+  if (!tomadorExistente) {
+    await db.insert(schema.tomadores).values({
+      empresaId: yellow.id,
+      cnpj: smartCnpj,
+      nome: "SMARTSOLVE AUDITORIA E CONSULTORIA CONTABIL LTDA.",
+      email: "contato@smartsolve.com.br",
+      fone: "1140841022",
+      cMun: "3550308",
+      cep: "04757025",
+      logradouro: "AV DAS NACOES UNIDAS",
+      numero: "18801",
+      complemento: "CONJ 407 ANDAR 4",
+      bairro: "JARDIM DOM BOSCO",
+      cPais: "BR",
+    });
+  }
+
+  await db.insert(schema.auditoria).values({
+    empresaId: yellow.id,
+    acao: "SEED_HOMOLOGACAO_YELLOWX_SMARTSOLVE",
+    detalhe: "Cadastro idempotente de prestador e tomador para homologação; procuração não verificada; transmissão bloqueada.",
+  });
+
+  return { empresaId: yellow.id, prestadorCnpj: yellowCnpj, tomadorCnpj: smartCnpj };
+}
