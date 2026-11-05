@@ -76,7 +76,8 @@ export async function certificadoDaEmpresa(empresaId: string): Promise<Certifica
     }
     const cert = await certificadoEscritorio();
     const esc = await db.query.escritorio.findFirst();
-    if (esc?.cnpj && cert.cnpjOuCpf !== esc.cnpj.replace(/\\D/g, "")) {
+    if (!esc?.cnpj) throw erro(422, "CNPJ do escritório não cadastrado; titularidade do certificado não pode ser verificada");
+    if (cert.cnpjOuCpf !== esc.cnpj.replace(/[^0-9]/g, "")) {
       throw erro(422, "O certificado A1 carregado não corresponde ao CNPJ cadastrado para o escritório");
     }
     return cert;
