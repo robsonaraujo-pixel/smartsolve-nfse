@@ -16,7 +16,7 @@ import rotasDocumentos from "./routes/documentos.js";
 import rotasCatalogo from "./routes/catalogo.js";
 import rotasConsultas from "./routes/consultas.js";
 import { migrarBanco } from "./db/index.js";
-import { garantirAdminInicial } from "./services/bootstrap.js";
+import { garantirAdminInicial, garantirCadastrosHomologacao } from "./services/bootstrap.js";
 
 export async function construirApp() {
   const app = Fastify({ logger: { level: process.env.LOG_LEVEL ?? "info" }, trustProxy: true });
@@ -63,6 +63,7 @@ const ehMain = process.argv[1] && /server\.(ts|js)$/.test(process.argv[1]);
 if (ehMain) {
   await migrarBanco();
   await garantirAdminInicial();
+  await garantirCadastrosHomologacao();
   const app = await construirApp();
   await app.listen({ port: Number(process.env.PORT ?? 3001), host: "0.0.0.0" });
 }

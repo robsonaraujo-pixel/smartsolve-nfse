@@ -3,6 +3,9 @@ import { z } from "zod";
 import { and, desc, eq, like } from "drizzle-orm";
 import { db, schema, erro } from "../services/db.js";
 import { prepararDps, transmitirDps, cancelarNfse } from "../services/emissao.js";
+import { assertFiscalWriteEnabled } from "../services/fiscal-write-guard.js";
+import { certificadoDaEmpresa } from "../services/certificado.js";
+import { buildDps, assinarXml, verificarAssinatura, type DpsInput } from "@smartsolve/nfse-core";
 
 const { dps, documentos, tentativas, servicosCatalogo, auditoria, STATUS_DPS } = schema;
 
@@ -74,6 +77,8 @@ export default async function (app: FastifyInstance) {
     const { empresaId } = req.params as { empresaId: string };
     await app.exigirEmpresa(req, empresaId, "podeEmitir");
     const body = pedidoSchema.parse(req.body);
+    // Evita reservar número/criar rascunho quando a requisição tentaria transmitir.
+    if (!body.somenteRascunho) assertFiscalWriteEnabled("TRANSMIT_NFSE");
 
     let servico = body.servico;
     let tribFed = body.tribFed;
@@ -92,6 +97,36 @@ export default async function (app: FastifyInstance) {
     const result = await transmitirDps(prep.dps.id);
     await db.insert(auditoria).values({ usuarioId: req.user.id, empresaId, acao: `DPS_${result.status}`, detalhe: result.chaveAcesso ?? result.idDps });
     return reply.code(result.status === "AUTORIZADA" ? 201 : 422).send(result);
+  });
+
+  /** Diagnóstico local, sem comunicação com a SEFIN nem alteração da DPS. */
+  app.get("/empresas/:empresaId/dps/:id/preflight", async (req) => {
+    const { empresaId, id } = req.params as { empresaId: string; id: string };
+    await app.exigirEmpresa(req, empresaId, "podeEmitir");
+    const row = await db.query.dps.findFirst({ where: and(eq(dps.id, id), eq(dps.empresaId, empresaId)) });
+    if (!row) throw erro(404, "DPS não encontrada");
+    const input = JSON.parse(row.entradaJson) as DpsInput;
+    if (input.tpAmb !== 2) throw erro(422, "Preflight disponível apenas para produção restrita");
+    const built = buildDps(input);
+    if (built.idDps !== row.idDps) throw erro(422, "Identificador DPS divergente do registro");
+    const resultado: {
+      ambiente: number; idDps: string; xmlGerado: boolean; certificado: string;
+      assinatura: string; detalhe?: string; xsd: string; transmissao: string;
+    } = {
+      ambiente: 2, idDps: built.idDps, xmlGerado: true, certificado: "PENDENTE",
+      assinatura: "PENDENTE", xsd: "NAO_EXECUTADO", transmissao: "BLOQUEADA",
+    };
+    try {
+      const cert = await certificadoDaEmpresa(empresaId);
+      resultado.certificado = "CARREGADO_E_TITULARIDADE_VERIFICADA";
+      const signed = assinarXml(built.xml, cert, "infDPS");
+      const verified = verificarAssinatura(signed);
+      resultado.assinatura = verified.valida ? "VALIDA_LOCALMENTE" : "INVALIDA";
+      if (!verified.valida) resultado.detalhe = verified.erro ?? "Assinatura local inválida";
+    } catch (e) {
+      resultado.detalhe = (e as Error).message;
+    }
+    return resultado;
   });
 
   /** Retransmite um rascunho ou uma DPS com erro de comunicação (idempotente). */
